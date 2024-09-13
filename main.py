@@ -1,9 +1,6 @@
-from telegram import ForceReply, Update
+from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
-
-# Define a few command handlers. These usually take the two arguments update and
-# context.
 async def addword(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     with open("words.txt", "a+", encoding="utf-8") as f:
         f.seek(0)
