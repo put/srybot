@@ -4,16 +4,29 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 
 # Define a few command handlers. These usually take the two arguments update and
 # context.
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user = update.effective_user
-    await update.message.reply_html(
-        rf"Hi {user.mention_html()}!",
-        reply_markup=ForceReply(selective=True),
-    )
+async def addword(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    with open("words.txt", "a+", encoding="utf-8") as f:
+        f.seek(0)
+        words = f.read().splitlines()
+        if len(context.args) < 1:
+            await update.message.reply_text("Should probably mention a word silly")
+            return
+        for word in words:
+            if word.lower() == context.args[0].strip().lower():
+                await update.message.reply_text(f"{word.lower()} is already in the word list ))")
+                return
+        f.write(f"{context.args[0].strip().lower()}\n")
+        await update.message.reply_text(f"{context.args[0].strip().lower()} was added to the word list ))")
+
 
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(update.message.text)
+    with open("words.txt", "r", encoding="utf-8") as f:
+        words = f.read().splitlines()
+        for word in words:
+            if word in update.message.text:
+                await update.message.reply_text("Is that an apology?!")
+                return
 
 def get_token_str(filename: str) -> str:
     txt = ""
@@ -22,16 +35,9 @@ def get_token_str(filename: str) -> str:
     return txt
 
 def main() -> None:
-    # Create the Application and pass it your bot's token.
     application = Application.builder().token(get_token_str(".token")).build()
-
-    # on different commands - answer in Telegram
-    application.add_handler(CommandHandler("start", start))
-
-    # on non command i.e message - echo the message on Telegram
+    application.add_handler(CommandHandler("addword", addword))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
-
-    # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
