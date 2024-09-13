@@ -18,7 +18,7 @@ async def addword(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def find_apologies(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     with open("words.txt", "r", encoding="utf-8") as f:
         words = f.read().splitlines()
         for word in words:
@@ -35,7 +35,7 @@ def get_token_str(filename: str) -> str:
 def main() -> None:
     application = Application.builder().token(get_token_str(".token")).build()
     application.add_handler(CommandHandler("addword", addword))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, find_apologies))
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
