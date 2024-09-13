@@ -21,7 +21,7 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     with open("words.txt", "r", encoding="utf-8") as f:
         words = f.read().splitlines()
         for word in words:
-            if word in update.message.text:
+            if word in update.message.text.lower():
                 await update.message.reply_text("Is that an apology?!")
                 return
 
