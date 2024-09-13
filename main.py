@@ -8,12 +8,13 @@ async def addword(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if len(context.args) < 1:
             await update.message.reply_text("Should probably mention a word silly")
             return
+        apology = " ".join(context.args).strip().lower()
         for word in words:
-            if word.lower() == context.args[0].strip().lower():
+            if word.lower() == apology:
                 await update.message.reply_text(f"{word.lower()} is already in the word list ))")
                 return
-        f.write(f"{context.args[0].strip().lower()}\n")
-        await update.message.reply_text(f"{context.args[0].strip().lower()} was added to the word list ))")
+        f.write(f"{apology}\n")
+        await update.message.reply_text(f"{apology} was added to the word list ))")
 
 
 
