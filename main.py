@@ -61,7 +61,33 @@ async def addword(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         f.write(f"{apology}\n")
         await update.message.reply_text(f"{apology} was added to the word list ))")
 
+async def delword(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    words: List[str] = []
+    with open("words.txt", "r", encoding="utf-8") as f:
+        words = f.read().splitlines()
+    with open("words.txt", "w+", encoding="utf-8") as f:
+        if len(context.args) < 1:
+            await update.message.reply_text("Should probably mention a word silly")
+            return
+        apology = " ".join(context.args).strip().lower()
+        if apology in words:
+            words.remove(apology)
+            f.writelines(f"{word}\n" for word in words)
+            await update.message.reply_text(f"{apology} was removed from the list ))")
+        else:
+            await update.message.reply_text(f"{apology} is not currently in the list ))")
 
+async def listwords(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    with open("words.txt", "r", encoding="utf-8") as f:
+        words = f.read().splitlines()
+        if len(words) > 0:
+            await update.message.reply_text(f"The current list of words is: {', '.join(words)}")
+        else:
+            await update.message.reply_text("There list of words is currently empty! Use the addword command to add some ))")
+
+async def helpcommand(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_markdown("*addword* _[word]_ -> `adds a word to be detected as apology`\n*delword* _[word]_ -> `removes word "
+                                    + "from detection list`\n*listwords* -> `shows complete list of words`\n*help* -> `this message`")
 
 async def find_apologies(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     with open("words.txt", "r", encoding="utf-8") as f:
@@ -86,6 +112,9 @@ def get_token_str(filename: str) -> str:
 def main() -> None:
     application = Application.builder().token(get_token_str(".token")).build()
     application.add_handler(CommandHandler("addword", addword))
+    application.add_handler(CommandHandler("delword", delword))
+    application.add_handler(CommandHandler("listwords", listwords))
+    application.add_handler(CommandHandler("help", helpcommand))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, find_apologies))
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
