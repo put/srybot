@@ -1,5 +1,50 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+from typing import List, Self
+import json
+
+class TGUser:
+    def __init__(self, id: int, apology_count: int) -> Self:
+        self.id = id
+        self.apology_count = apology_count
+
+class TGUserCollection:
+    def __init__(self, users: List[TGUser]):
+        self.users = users
+
+    @staticmethod
+    def get_users(path: str) -> Self:
+        test: TGUserCollection = TGUserCollection([])
+        with open(path, "a+") as f:
+            f.seek(0)
+            read_txt = f.read()
+            if len(read_txt) > 0:
+                test = TGUserCollection(**json.loads(read_txt))
+                test.users = [TGUser(**user) for user in test.users]
+        return test
+    
+    @staticmethod
+    def make_user(path: str, id: int) -> TGUser:
+        users: TGUserCollection = TGUserCollection.get_users(path)
+        user = next((u for u in users.users if u.id == id), None)
+        if not user:
+            user = TGUser(id, 0)
+            users.users.append(user)
+            with open(path, "w") as f:
+                f.write(json.dumps(users, default=lambda o: o.__dict__))
+            return user
+        else:
+            return user
+        
+    @staticmethod
+    def update(path: str, id: int) -> None:
+        users: TGUserCollection = TGUserCollection.get_users(path)
+        index = next((i for i, user in enumerate(users.users) if user.id == id), None)
+        if index is not None:
+            users.users[index].apology_count = users.users[index].apology_count + 1
+            with open(path, "w") as f:
+                f.write(json.dumps(users, default=lambda o: o.__dict__))
+
 
 async def addword(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     with open("words.txt", "a+", encoding="utf-8") as f:
@@ -23,7 +68,13 @@ async def find_apologies(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         words = f.read().splitlines()
         for word in words:
             if word in update.message.text.lower():
-                await update.message.reply_text("Is that an apology?!")
+                users: TGUserCollection = TGUserCollection.get_users("users.json")
+                user = next((u for u in users.users if u.id == update.effective_user.id), None)
+                if not user:
+                    user = TGUserCollection.make_user("users.json", update.effective_user.id)
+                user.apology_count = user.apology_count + 1
+                await update.message.reply_text(f"No need to apologize! You've done this {user.apology_count} time{'' if user.apology_count == 1 else 's'} now.")
+                TGUserCollection.update("users.json", user.id)
                 return
 
 def get_token_str(filename: str) -> str:
